@@ -8,7 +8,7 @@
  * the complete extension state is enabled before any C code is called.
  */
 #include <asm/trap.h>
-#include <csr.h>
+#include <c907/csr.h>
 #ifdef CONFIG_ARCH_SMP
 #include <smp.h>
 #endif

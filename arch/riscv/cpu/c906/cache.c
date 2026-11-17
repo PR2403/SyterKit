@@ -9,12 +9,22 @@
 #include <mmu.h>
 #include <timer.h>
 
-#include <csr.h>
+#include <c906/csr.h>
 
 #include <common.h>
 #include <log.h>
 
 #define L1_CACHE_BYTES (64) /**< Size of L1 cache line in bytes. */
+#define C906_MCOR_INIT                                                                    \
+	(MCOR_CACHE_SEL_BOTH | MCOR_INV | MCOR_BHT_INV | MCOR_BTB_INV)
+#define C906_MHCR_INIT                                                                    \
+	(MHCR_WA | MHCR_WB | MHCR_RS | MHCR_BPE | MHCR_BTB | MHCR_WBR)
+#define C906_MHINT_INIT                                                                   \
+	(MHINT_D_PLD | MHINT_AMR_1 | MHINT_IPLD | MHINT_IWPE | MHINT_D_DIS_16)
+
+_Static_assert(C906_MCOR_INIT == 0x30013U, "unexpected C906 MCOR initialization");
+_Static_assert(C906_MHCR_INIT == 0x17cU, "unexpected C906 MHCR initialization");
+_Static_assert(C906_MHINT_INIT == 0x630cU, "unexpected C906 MHINT initialization");
 
 /**
  * @file cache.c
@@ -46,10 +56,14 @@ void data_sync_barrier(void)
  */
 void cache_init(void)
 {
-	csr_write(mcor, 0x70013); // Configure cache options
-	csr_write(mhcr, 0x11ff); // Set cache hit control register
-	csr_set(mxstatus, 0x638000); // Set machine status register
-	csr_write(mhint, 0x16e30c); // Set hint for cache operations
+	csr_write(mcor, C906_MCOR_INIT);
+	csr_write(mhcr, C906_MHCR_INIT);
+	csr_set(mxstatus, MXSTATUS_C9XX);
+	/*
+	 * C906 user manual 16.1.7.5: DPLD is bit 2, AMR is bits 4:3,
+	 * IPLD is bit 8, IWPE is bit 9 and D_DIS is bits 14:13.
+	 */
+	csr_write(mhint, C906_MHINT_INIT);
 }
 
 /**
@@ -60,7 +74,7 @@ void cache_init(void)
  */
 void dcache_enable(void)
 {
-	csr_write(mhcr, 0x2); // Set the data cache enable bit
+	csr_set(mhcr, MHCR_DE);
 }
 
 /**
@@ -71,7 +85,7 @@ void dcache_enable(void)
  */
 void icache_enable(void)
 {
-	csr_set(mhcr, 0x1); // Set the instruction cache enable bit
+	csr_set(mhcr, MHCR_IE);
 }
 
 /**

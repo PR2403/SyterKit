@@ -9,7 +9,7 @@
  * use T-Head instructions.
  */
 #include <asm/trap.h>
-#include <csr.h>
+#include <c906/csr.h>
 
 	.section .text.entry, "ax", @progbits
 	.balign 4
@@ -56,11 +56,15 @@ _start:
 
 	jal set_timer_count
 
-#ifdef CONFIG_ARCH_DCACHE
+#if defined(CONFIG_ARCH_ICACHE) || defined(CONFIG_ARCH_DCACHE)
 	jal cache_init
+#endif
 
+#ifdef CONFIG_ARCH_ICACHE
 	jal icache_enable
+#endif
 
+#ifdef CONFIG_ARCH_DCACHE
 	jal dcache_enable
 #endif
 

@@ -19,6 +19,7 @@
 #include <stdint.h>
 
 #include <cache.h>
+#include <c907/csr.h>
 #include <cli/cli.h>
 #include <cli/cli_shell.h>
 #include <common.h>

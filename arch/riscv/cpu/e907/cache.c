@@ -20,7 +20,7 @@
 #include <mmu.h>
 #include <timer.h>
 
-#include <csr.h>
+#include <e907/csr.h>
 
 #include <common.h>
 #include <log.h>
@@ -30,6 +30,11 @@
 
 /* #define DEBUG_SYSMAP */
 #define L1_CACHE_BYTES (32) /**< Size of L1 cache line in bytes. */
+#define E907_MHCR_INIT (MHCR_WA | MHCR_WB | MHCR_RS | MHCR_BPE | MHCR_BTE)
+#define E907_MHINT_INIT (MHINT_D_PLD | MHINT_AMR_1 | MHINT_IWPE | MHINT_PREF_N_16)
+
+_Static_assert(E907_MHCR_INIT == 0x103cU, "unexpected E907 MHCR initialization");
+_Static_assert(E907_MHINT_INIT == 0x640cU, "unexpected E907 MHINT initialization");
 
 enum sysmap_ret_code {
 	SYSMAP_RET_OK = 0,
@@ -306,9 +311,12 @@ void cache_init(void)
 	/* the system map has to be programmed before either cache is on: what is cacheable decides how every access
 	 * made from here on is treated, the code that is running and its stack included */
 	board_sysmap_init();
-	// Configure cache options
-	csr_write(mhcr, MHCR_WB | MHCR_WA | MHCR_RS | MHCR_BPE | MHCR_BTE); // Set cache hit control register
-	csr_write(mhint, MHINT_D_PLD | MHINT_IWPE | MHINT_AMR_1 | MHINT_PREF_N_16); // Set hint for cache operations
+	csr_write(mhcr, E907_MHCR_INIT);
+	/*
+	 * E907 user manual 18.1.6.3: D_PLD is bit 2, AMR is bits 4:3,
+	 * IWPE is bit 10 and PREF_N is bits 14:13. E907 has no IPLD field.
+	 */
+	csr_write(mhint, E907_MHINT_INIT);
 }
 
 /**

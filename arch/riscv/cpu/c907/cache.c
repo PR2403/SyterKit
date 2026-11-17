@@ -17,9 +17,18 @@
 #include <types.h>
 
 #include <cache.h>
-#include <csr.h>
+#include <c907/csr.h>
 
 #define L1_CACHE_BYTES (64U)
+#define C907_MCOR_INIT (MCOR_CACHE_SEL_BOTH | MCOR_INV | MCOR_BHT_INV)
+#define C907_MHCR_INIT                                                                     \
+	(MHCR_WA | MHCR_WB | MHCR_RS | MHCR_BPE | MHCR_IBPE | MHCR_WBR | MHCR_L0BTB)
+#define C907_MHINT_INIT                                                                    \
+	(MHINT_D_PLD | MHINT_AMR_1 | MHINT_IPLD | MHINT_IWPE | MHINT_D_DIS_16 | MHINT_ECC)
+
+_Static_assert(C907_MCOR_INIT == 0x10013U, "unexpected C907 MCOR initialization");
+_Static_assert(C907_MHCR_INIT == 0x11bcU, "unexpected C907 MHCR initialization");
+_Static_assert(C907_MHINT_INIT == 0x10650cU, "unexpected C907 MHINT initialization");
 
 /**
  * @brief Insert the C907 instruction/data synchronization barrier.
@@ -34,10 +43,17 @@ void data_sync_barrier(void)
  */
 void cache_init(void)
 {
-	csr_write(mcor, 0x70013);
-	csr_write(mhcr, 0x11ff & ~(MHCR_IE | MHCR_DE));
-	csr_set(mxstatus, 0x638000);
-	csr_write(mhint, 0x16e30c);
+	/* Invalidate both L1 caches and the branch history table before enabling. */
+	csr_write(mcor, C907_MCOR_INIT);
+	csr_write(mhcr, C907_MHCR_INIT);
+	csr_set(mxstatus, MXSTATUS_C9XX);
+	/*
+	 * C907 user manual 19.1.9.6: DPLD is bit 2, AMR is bits 4:3,
+	 * IPLD is bit 8, IWPE is bit 10, D_DIS is bits 14:13 and ECC is
+	 * bit 20. Keep ECC enabled as the previous initialization did; unlike
+	 * E907, bit 20 does not control accurate exception reporting on C907.
+	 */
+	csr_write(mhint, C907_MHINT_INIT);
 }
 
 /**
@@ -45,7 +61,7 @@ void cache_init(void)
  */
 void dcache_enable(void)
 {
-	csr_set(mhcr, 1U << 1);
+	csr_set(mhcr, MHCR_DE);
 }
 
 /**
@@ -61,7 +77,7 @@ void dcache_disable(void)
  */
 void icache_enable(void)
 {
-	csr_set(mhcr, 1U << 0);
+	csr_set(mhcr, MHCR_IE);
 }
 
 /**

@@ -30,39 +30,10 @@ extern "C" {
 #define MSTATUS_SXL (3ULL << 34)
 #define MSTATUS64_SD (1ULL << 63)
 
-/** @brief Machine Extra Status Bit Definitions */
-#define MXSTATUS_MM (1 << 15)
-#define MXSTATUS_UCME (1 << 16)
-#define MXSTATUS_CLINTEE (1 << 17)
-#define MXSTATUS_MAEE (1 << 21)
-#define MXSTATUS_THEADISAEE (1 << 22)
-
-/* C9xx DRAM/cache code expects all of the machine extensions enabled. */
-#define MXSTATUS_C9XX (MXSTATUS_MM | MXSTATUS_UCME | MXSTATUS_CLINTEE | \
-			   MXSTATUS_MAEE | MXSTATUS_THEADISAEE)
-
-/** @brief Machine Hardware Config Bit Definitions */
-#define MHCR_IE (1 << 0)
-#define MHCR_DE (1 << 1)
-#define MHCR_WB (1 << 2)
-#define MHCR_WA (1 << 3)
-#define MHCR_RS (1 << 4)
-#define MHCR_BPE (1 << 5)
-#define MHCR_BTE (1 << 12)
-
-/** @brief Machine HINT Bit Definitions */
-#define MHINT_D_PLD (1 << 2)
-#define MHINT_AMR_0 (0b00 << 3)
-#define MHINT_AMR_1 (0b01 << 3)
-#define MHINT_AMR_2 (0b10 << 3)
-#define MHINT_AMR_3 (0b11 << 3)
-#define MHINT_IWPE (1 << 10)
-#define MHINT_PREF_N_2 (0b00 << 13)
-#define MHINT_PREF_N_4 (0b01 << 13)
-#define MHINT_PREF_N_8 (0b10 << 13)
-#define MHINT_PREF_N_16 (0b11 << 13)
-#define MHINT_AEE (1 << 20)
-#define MHINT_PCFIFO_FREEZE (1 << 24)
+/*
+ * T-Head extension CSRs differ between cores. Their fields live in the
+ * selected core's header, for example <c906/csr.h> or <c907/csr.h>.
+ */
 
 /** @brief Machine Interrupt Pending (mip) Bit Definitions */
 #define MIP_USIP (1 << 0) /**< User Software Interrupt Pending */
